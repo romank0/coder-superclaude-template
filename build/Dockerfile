@@ -52,7 +52,21 @@ RUN npm install -g \
     @context7/mcp \
     @anthropic-ai/claude-mcp-server-brave-search \
     @anthropic-ai/claude-mcp-server-fetch \
+    @modelcontextprotocol/server-sequential-thinking \
+    @playwright/mcp@latest \
+    @anthropic-ai/mcp-server-chrome-devtools \
     || true
+
+# Install uv for Python package management (needed for Serena)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install Playwright browsers
+RUN npx playwright install --with-deps chromium
+
+# Install Chrome for DevTools MCP
+RUN apt-get update && apt-get install -y \
+    chromium-browser \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install code-server (VS Code in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
@@ -91,7 +105,7 @@ COPY --chown=coder:coder setup-github.sh /home/coder/.local/bin/setup-github
 RUN chmod +x /home/coder/.local/bin/setup-github
 
 # Set environment variables
-ENV PATH="/home/coder/.local/bin:${PATH}"
+ENV PATH="/home/coder/.local/bin:/root/.local/bin:/home/coder/.cargo/bin:${PATH}"
 ENV SHELL=/bin/bash
 
 # Expose code-server port

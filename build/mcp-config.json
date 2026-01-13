@@ -28,6 +28,33 @@
         "-y",
         "@anthropic-ai/claude-mcp-server-fetch"
       ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-server-chrome-devtools"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "serena-mcp"
+      ]
     }
   }
 }
