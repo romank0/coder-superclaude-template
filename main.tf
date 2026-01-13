@@ -77,6 +77,8 @@ resource "coder_agent" "main" {
     set -e
 
     # SSH keys are mounted read-only to .ssh-host, copy to writable .ssh
+    # Fix ownership in case of stale permissions from previous runs
+    sudo rm -rf ~/.ssh 2>/dev/null || true
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
     if [ -d ~/.ssh-host ]; then
