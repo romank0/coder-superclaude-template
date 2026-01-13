@@ -83,8 +83,11 @@ resource "coder_agent" "main" {
     sudo rm -rf ~/.ssh 2>/dev/null || true
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
-    if [ -d ~/.ssh-host ] && [ "$(sudo ls -A ~/.ssh-host 2>/dev/null)" ]; then
-      sudo cp ~/.ssh-host/* ~/.ssh/ 2>/dev/null || true
+    if [ -d ~/.ssh-host ]; then
+      # Copy all files from ssh-host (root-owned) to .ssh
+      for f in $(sudo ls ~/.ssh-host/ 2>/dev/null); do
+        sudo cp ~/.ssh-host/"$f" ~/.ssh/ 2>/dev/null || true
+      done
       sudo chown -R coder:coder ~/.ssh/ 2>/dev/null || true
       chmod 600 ~/.ssh/id_* 2>/dev/null || true
       chmod 644 ~/.ssh/*.pub 2>/dev/null || true
