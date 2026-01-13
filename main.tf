@@ -186,12 +186,6 @@ resource "coder_agent" "main" {
       coder dotfiles -y "${data.coder_parameter.dotfiles_repo.value}" 2>/dev/null || true
     fi
 
-    # Start Shelley web coding agent in background (fully detached to avoid pipe warning)
-    if command -v shelley &> /dev/null; then
-      echo "Starting Shelley..."
-      cd ~/workspace && setsid shelley serve -port 8181 </dev/null >~/.shelley.log 2>&1 &
-    fi
-
     echo "Setup complete!"
   EOT
 
@@ -243,17 +237,6 @@ resource "coder_app" "terminal" {
   display_name = "Terminal"
   icon         = "/icon/terminal.svg"
   command      = "/bin/bash"
-}
-
-# Shelley Web Coding Agent
-resource "coder_app" "shelley" {
-  agent_id     = coder_agent.main.id
-  slug         = "shelley"
-  display_name = "Shelley"
-  url          = "http://localhost:8181"
-  icon         = "/icon/widgets.svg"
-  subdomain    = true
-  share        = "owner"
 }
 
 resource "docker_volume" "home_volume" {
