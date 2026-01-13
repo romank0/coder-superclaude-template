@@ -79,12 +79,13 @@ resource "coder_agent" "main" {
     set -e
 
     # SSH keys are mounted read-only to .ssh-host, copy to writable .ssh
-    # Fix ownership in case of stale permissions from previous runs
+    # Use sudo to read root-owned mounted files, then fix ownership
     sudo rm -rf ~/.ssh 2>/dev/null || true
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
     if [ -d ~/.ssh-host ]; then
-      cp ~/.ssh-host/* ~/.ssh/ 2>/dev/null || true
+      sudo cp ~/.ssh-host/* ~/.ssh/ 2>/dev/null || true
+      sudo chown coder:coder ~/.ssh/*
       chmod 600 ~/.ssh/id_* 2>/dev/null || true
       chmod 644 ~/.ssh/*.pub 2>/dev/null || true
     fi
@@ -108,13 +109,11 @@ resource "coder_agent" "main" {
       echo "Warning: No Claude credentials found. Run 'claude login' on host machine."
     fi
 
-    # Install SuperClaude
-    if [ ! -d ~/.claude/superclaude ]; then
+    # Install SuperClaude commands
+    if [ ! -d ~/.claude/commands/sc ]; then
       echo "Installing SuperClaude..."
-      git clone https://github.com/NomenAK/SuperClaude.git ~/.claude/superclaude 2>/dev/null || true
-      if [ -f ~/.claude/superclaude/install.sh ]; then
-        cd ~/.claude/superclaude && chmod +x install.sh && ./install.sh
-      fi
+      pip3 install --user superclaude 2>/dev/null || true
+      ~/.local/bin/superclaude install 2>/dev/null || superclaude install 2>/dev/null || true
     fi
 
     # Setup MCP servers directory
