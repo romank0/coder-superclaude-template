@@ -96,7 +96,7 @@ resource "coder_agent" "main" {
     # Install Claude Code if not present
     if ! command -v claude &> /dev/null; then
       echo "Installing Claude Code..."
-      npm install -g @anthropic-ai/claude-code
+      sudo npm install -g @anthropic-ai/claude-code
     fi
 
     # Claude credentials are mounted from host machine
@@ -120,16 +120,19 @@ resource "coder_agent" "main" {
 
     # Install Context7 MCP
     if ! command -v npx &> /dev/null || ! npx @context7/mcp --version &> /dev/null; then
-      npm install -g @context7/mcp 2>/dev/null || true
+      sudo npm install -g @context7/mcp 2>/dev/null || true
     fi
 
     # Clone repository if specified
     if [ -n "${data.coder_parameter.github_repo.value}" ]; then
-      REPO_NAME=$(basename "${data.coder_parameter.github_repo.value}" .git)
+      REPO_INPUT="${data.coder_parameter.github_repo.value}"
+      # Strip any URL prefixes to get just owner/repo
+      REPO_PATH=$(echo "$REPO_INPUT" | sed 's|https://github.com/||' | sed 's|git@github.com:||' | sed 's|\.git$||')
+      REPO_NAME=$(basename "$REPO_PATH")
       if [ ! -d ~/workspace/$REPO_NAME ]; then
         mkdir -p ~/workspace
-        git clone git@github.com:${data.coder_parameter.github_repo.value}.git ~/workspace/$REPO_NAME 2>/dev/null || \
-        git clone https://github.com/${data.coder_parameter.github_repo.value}.git ~/workspace/$REPO_NAME
+        git clone "git@github.com:$REPO_PATH.git" ~/workspace/$REPO_NAME 2>/dev/null || \
+        git clone "https://github.com/$REPO_PATH.git" ~/workspace/$REPO_NAME
       fi
     fi
 
