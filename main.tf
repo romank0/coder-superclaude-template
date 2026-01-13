@@ -194,7 +194,7 @@ resource "coder_app" "code-server" {
   display_name = "VS Code"
   url          = "http://localhost:8080/?folder=/home/coder/workspace"
   icon         = "/icon/code.svg"
-  subdomain    = true
+  subdomain    = false
   share        = "owner"
 }
 
