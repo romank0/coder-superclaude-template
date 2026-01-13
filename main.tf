@@ -132,24 +132,20 @@ resource "coder_agent" "main" {
 
     # Configure MCP servers in Claude config
     if [ -f ~/.claude.json ]; then
-      # Add MCP servers to the project config
+      # Add MCP servers to the project config (preserve coder MCP from module)
       jq --arg workspace "/home/coder/workspace" '
         .projects[$workspace].mcpServers += {
           "filesystem": {
             "command": "npx",
-            "args": ["-y", "@anthropic-ai/claude-mcp-server-filesystem", "/home/coder/workspace"]
+            "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/coder/workspace"]
           },
           "memory": {
             "command": "npx",
-            "args": ["-y", "@anthropic-ai/claude-mcp-server-memory"]
+            "args": ["-y", "@modelcontextprotocol/server-memory"]
           },
           "context7": {
             "command": "npx",
-            "args": ["-y", "@context7/mcp"]
-          },
-          "fetch": {
-            "command": "npx",
-            "args": ["-y", "@anthropic-ai/claude-mcp-server-fetch"]
+            "args": ["-y", "@upstash/context7-mcp"]
           },
           "sequential-thinking": {
             "command": "npx",
@@ -161,11 +157,11 @@ resource "coder_agent" "main" {
           },
           "chrome-devtools": {
             "command": "npx",
-            "args": ["-y", "@anthropic-ai/mcp-server-chrome-devtools"]
+            "args": ["-y", "chrome-devtools-mcp"]
           },
           "serena": {
             "command": "uvx",
-            "args": ["serena-mcp"]
+            "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
           }
         }
       ' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json

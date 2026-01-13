@@ -47,14 +47,12 @@ RUN npm install -g @anthropic-ai/claude-code
 
 # Install useful MCP servers
 RUN npm install -g \
-    @anthropic-ai/claude-mcp-server-filesystem \
-    @anthropic-ai/claude-mcp-server-memory \
-    @context7/mcp \
-    @anthropic-ai/claude-mcp-server-brave-search \
-    @anthropic-ai/claude-mcp-server-fetch \
+    @modelcontextprotocol/server-filesystem \
+    @modelcontextprotocol/server-memory \
     @modelcontextprotocol/server-sequential-thinking \
+    @upstash/context7-mcp \
     @playwright/mcp@latest \
-    @anthropic-ai/mcp-server-chrome-devtools \
+    chrome-devtools-mcp \
     || true
 
 # Install uv for Python package management (needed for Serena)

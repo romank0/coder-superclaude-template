@@ -2,59 +2,31 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic-ai/claude-mcp-server-filesystem",
-        "/home/coder/workspace"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/coder/workspace"]
     },
     "memory": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic-ai/claude-mcp-server-memory"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
     },
     "context7": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@context7/mcp"
-      ]
-    },
-    "fetch": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic-ai/claude-mcp-server-fetch"
-      ]
+      "args": ["-y", "@upstash/context7-mcp"]
     },
     "sequential-thinking": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
+      "args": ["-y", "@playwright/mcp@latest"]
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic-ai/mcp-server-chrome-devtools"
-      ]
+      "args": ["-y", "chrome-devtools-mcp"]
     },
     "serena": {
       "command": "uvx",
-      "args": [
-        "serena-mcp"
-      ]
+      "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
     }
   }
 }
