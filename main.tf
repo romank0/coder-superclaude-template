@@ -148,11 +148,10 @@ resource "coder_agent" "main" {
       coder dotfiles -y "${data.coder_parameter.dotfiles_repo.value}" 2>/dev/null || true
     fi
 
-    # Start Shelley web coding agent in background
+    # Start Shelley web coding agent in background (fully detached to avoid pipe warning)
     if command -v shelley &> /dev/null; then
       echo "Starting Shelley..."
-      (cd ~/workspace && nohup shelley serve -port 8181 >> ~/.shelley.log 2>&1 &)
-      sleep 1
+      cd ~/workspace && setsid shelley serve -port 8181 </dev/null >~/.shelley.log 2>&1 &
     fi
 
     echo "Setup complete!"
