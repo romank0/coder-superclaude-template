@@ -83,13 +83,16 @@ resource "coder_agent" "main" {
     sudo rm -rf ~/.ssh 2>/dev/null || true
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
-    if [ -d ~/.ssh-host ]; then
+    if [ -d ~/.ssh-host ] && [ "$(sudo ls -A ~/.ssh-host 2>/dev/null)" ]; then
       sudo cp ~/.ssh-host/* ~/.ssh/ 2>/dev/null || true
-      sudo chown coder:coder ~/.ssh/*
+      sudo chown -R coder:coder ~/.ssh/ 2>/dev/null || true
       chmod 600 ~/.ssh/id_* 2>/dev/null || true
       chmod 644 ~/.ssh/*.pub 2>/dev/null || true
     fi
     ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+
+    # Fix permissions on mounted .claude directory (owned by root from host)
+    sudo chown -R coder:coder ~/.claude 2>/dev/null || true
 
     # Configure git
     git config --global user.name "${data.coder_workspace_owner.me.name}"
