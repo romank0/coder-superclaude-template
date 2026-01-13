@@ -16,7 +16,9 @@ module "claude-code" {
   version      = "1.4.0"
   agent_id     = coder_agent.main.id
   folder       = "/home/coder/workspace"
-  install_claude_code = true
+
+  # Disable module's npm install - we handle it with sudo in startup script
+  install_claude_code = false
 
   # Run in background with tmux for persistent sessions
   experiment_use_tmux     = true
