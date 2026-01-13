@@ -130,6 +130,48 @@ resource "coder_agent" "main" {
       sudo npm install -g @context7/mcp 2>/dev/null || true
     fi
 
+    # Configure MCP servers in Claude config
+    if [ -f ~/.claude.json ]; then
+      # Add MCP servers to the project config
+      jq --arg workspace "/home/coder/workspace" '
+        .projects[$workspace].mcpServers += {
+          "filesystem": {
+            "command": "npx",
+            "args": ["-y", "@anthropic-ai/claude-mcp-server-filesystem", "/home/coder/workspace"]
+          },
+          "memory": {
+            "command": "npx",
+            "args": ["-y", "@anthropic-ai/claude-mcp-server-memory"]
+          },
+          "context7": {
+            "command": "npx",
+            "args": ["-y", "@context7/mcp"]
+          },
+          "fetch": {
+            "command": "npx",
+            "args": ["-y", "@anthropic-ai/claude-mcp-server-fetch"]
+          },
+          "sequential-thinking": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+          },
+          "playwright": {
+            "command": "npx",
+            "args": ["-y", "@playwright/mcp@latest"]
+          },
+          "chrome-devtools": {
+            "command": "npx",
+            "args": ["-y", "@anthropic-ai/mcp-server-chrome-devtools"]
+          },
+          "serena": {
+            "command": "uvx",
+            "args": ["serena-mcp"]
+          }
+        }
+      ' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+      echo "MCP servers configured."
+    fi
+
     # Clone repository if specified
     if [ -n "${data.coder_parameter.github_repo.value}" ]; then
       REPO_INPUT="${data.coder_parameter.github_repo.value}"
