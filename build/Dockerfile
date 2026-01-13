@@ -57,6 +57,10 @@ RUN npm install -g \
 # Install code-server (VS Code in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
+# Install Shelley (web-based coding agent)
+RUN curl -Lo /usr/local/bin/shelley "https://github.com/boldsoftware/shelley/releases/latest/download/shelley_linux_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')" \
+    && chmod +x /usr/local/bin/shelley
+
 # Create coder user
 RUN useradd --create-home --shell /bin/bash coder \
     && echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
