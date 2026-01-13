@@ -151,7 +151,8 @@ resource "coder_agent" "main" {
     # Start Shelley web coding agent in background
     if command -v shelley &> /dev/null; then
       echo "Starting Shelley..."
-      cd ~/workspace && nohup shelley serve -port 8181 > ~/.shelley.log 2>&1 &
+      (cd ~/workspace && nohup shelley serve -port 8181 >> ~/.shelley.log 2>&1 &)
+      sleep 1
     fi
 
     echo "Setup complete!"
