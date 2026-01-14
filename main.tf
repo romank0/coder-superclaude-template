@@ -33,10 +33,10 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 # Parameters for customization
-data "coder_parameter" "github_repo" {
-  name         = "github_repo"
-  display_name = "GitHub Repository"
-  description  = "Repository to clone (e.g., owner/repo)"
+data "coder_parameter" "git_repo" {
+  name         = "git_repo"
+  display_name = "Git Repository"
+  description  = "Repository to clone (SSH: git@host:path.git, HTTPS: https://host/path.git, or shorthand: owner/repo for GitHub)"
   type         = "string"
   default      = ""
   mutable      = true
@@ -92,7 +92,8 @@ resource "coder_agent" "main" {
       chmod 600 ~/.ssh/id_* 2>/dev/null || true
       chmod 644 ~/.ssh/*.pub 2>/dev/null || true
     fi
-    ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+    # Add common git hosts to known_hosts
+    ssh-keyscan github.com gitlab.com bitbucket.org ssh.dev.azure.com >> ~/.ssh/known_hosts 2>/dev/null || true
 
     # Fix permissions on mounted .claude directory (owned by root from host)
     sudo chown -R coder:coder ~/.claude 2>/dev/null || true
@@ -169,15 +170,32 @@ resource "coder_agent" "main" {
     fi
 
     # Clone repository if specified
-    if [ -n "${data.coder_parameter.github_repo.value}" ]; then
-      REPO_INPUT="${data.coder_parameter.github_repo.value}"
-      # Strip any URL prefixes to get just owner/repo
-      REPO_PATH=$(echo "$REPO_INPUT" | sed 's|https://github.com/||' | sed 's|git@github.com:||' | sed 's|\.git$||')
-      REPO_NAME=$(basename "$REPO_PATH")
+    if [ -n "${data.coder_parameter.git_repo.value}" ]; then
+      REPO_INPUT="${data.coder_parameter.git_repo.value}"
+
+      # Extract repo name from various URL formats
+      REPO_NAME=$(basename "$REPO_INPUT" .git)
+
       if [ ! -d ~/workspace/$REPO_NAME ]; then
         mkdir -p ~/workspace
-        git clone "git@github.com:$REPO_PATH.git" ~/workspace/$REPO_NAME 2>/dev/null || \
-        git clone "https://github.com/$REPO_PATH.git" ~/workspace/$REPO_NAME
+
+        # Check if it's already a full URL (SSH or HTTPS)
+        if echo "$REPO_INPUT" | grep -qE '^(git@|https://|ssh://|git://)'; then
+          # Full URL provided - use as-is, try SSH first then HTTPS
+          if echo "$REPO_INPUT" | grep -qE '^https://'; then
+            # HTTPS URL - also try SSH variant
+            git clone "$REPO_INPUT" ~/workspace/$REPO_NAME 2>/dev/null || \
+            git clone "$(echo "$REPO_INPUT" | sed 's|https://\([^/]*\)/|git@\1:|')" ~/workspace/$REPO_NAME
+          else
+            # SSH URL - also try HTTPS variant
+            git clone "$REPO_INPUT" ~/workspace/$REPO_NAME 2>/dev/null || \
+            git clone "$(echo "$REPO_INPUT" | sed 's|git@\([^:]*\):|https://\1/|')" ~/workspace/$REPO_NAME
+          fi
+        else
+          # Shorthand format (owner/repo) - assume GitHub
+          git clone "git@github.com:$REPO_INPUT.git" ~/workspace/$REPO_NAME 2>/dev/null || \
+          git clone "https://github.com/$REPO_INPUT.git" ~/workspace/$REPO_NAME
+        fi
       fi
     fi
 
