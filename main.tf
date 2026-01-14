@@ -259,7 +259,7 @@ resource "coder_app" "code-server" {
   agent_id     = coder_agent.main.id
   slug         = "code-server"
   display_name = "VS Code"
-  url          = "http://localhost:8080/?folder=/home/coder/workspace"
+  url          = "http://localhost:8080/?folder=${local.repo_folder}"
   icon         = "/icon/code.svg"
   subdomain    = false
   share        = "owner"
