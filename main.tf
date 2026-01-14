@@ -15,7 +15,7 @@ module "claude-code" {
   source       = "registry.coder.com/coder/claude-code/coder"
   version      = "1.4.0"
   agent_id     = coder_agent.main.id
-  folder       = "/home/coder/workspace"
+  folder       = local.repo_folder
 
   # Disable module's npm install - we handle it with sudo in startup script
   install_claude_code = false
@@ -31,6 +31,12 @@ provider "docker" {}
 data "coder_provisioner" "me" {}
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
+
+# Compute the repo folder path dynamically
+locals {
+  repo_name   = data.coder_parameter.git_repo.value != "" ? basename(replace(data.coder_parameter.git_repo.value, ".git", "")) : ""
+  repo_folder = local.repo_name != "" ? "/home/coder/workspace/${local.repo_name}" : "/home/coder/workspace"
+}
 
 # Parameters for customization
 data "coder_parameter" "git_repo" {
@@ -145,11 +151,11 @@ resource "coder_agent" "main" {
     # Configure MCP servers in Claude config
     if [ -f ~/.claude.json ]; then
       # Add MCP servers to the project config (preserve coder MCP from module)
-      jq --arg workspace "/home/coder/workspace" '
+      jq --arg workspace "${local.repo_folder}" '
         .projects[$workspace].mcpServers += {
           "filesystem": {
             "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/coder/workspace"]
+            "args": ["-y", "@modelcontextprotocol/server-filesystem", $workspace]
           },
           "memory": {
             "command": "npx",
