@@ -180,6 +180,10 @@ resource "coder_agent" "main" {
           "serena": {
             "command": "uvx",
             "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
+          },
+          "vibe-kanban": {
+            "command": "npx",
+            "args": ["-y", "vibe-kanban", "--mcp"]
           }
         }
       ' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
