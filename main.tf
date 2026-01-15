@@ -221,6 +221,10 @@ resource "coder_agent" "main" {
       coder dotfiles -y "${data.coder_parameter.dotfiles_repo.value}" 2>/dev/null || true
     fi
 
+    # Start VibeKanban in background
+    echo "Starting VibeKanban..."
+    PORT=5173 nohup npx vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
+
     echo "Setup complete!"
   EOT
 
@@ -272,6 +276,17 @@ resource "coder_app" "terminal" {
   display_name = "Terminal"
   icon         = "/icon/terminal.svg"
   command      = "/bin/bash"
+}
+
+# VibeKanban App
+resource "coder_app" "vibekanban" {
+  agent_id     = coder_agent.main.id
+  slug         = "vibekanban"
+  display_name = "VibeKanban"
+  url          = "http://localhost:5173"
+  icon         = "/icon/kanban.svg"
+  subdomain    = true
+  share        = "owner"
 }
 
 resource "docker_volume" "home_volume" {
