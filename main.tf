@@ -223,7 +223,7 @@ resource "coder_agent" "main" {
 
     # Start VibeKanban in background
     echo "Starting VibeKanban..."
-    PORT=5173 nohup npx vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
+    PORT=5173 nohup npx -y vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
 
     echo "Setup complete!"
   EOT
