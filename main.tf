@@ -115,6 +115,12 @@ resource "coder_agent" "main" {
       sudo npm install -g @anthropic-ai/claude-code
     fi
 
+    # Install Happy (Claude Code mobile client)
+    if ! command -v happy &> /dev/null; then
+      echo "Installing Happy..."
+      sudo npm install -g happy-coder
+    fi
+
     # Claude credentials are mounted from host machine
     if [ -f ~/.claude/.credentials.json ]; then
       echo "Claude credentials loaded from host machine."
@@ -291,6 +297,15 @@ resource "coder_app" "vibekanban" {
   icon         = "/icon/kanban.svg"
   subdomain    = true
   share        = "owner"
+}
+
+# Happy - Claude Code Mobile Client (https://happy.engineering)
+resource "coder_app" "happy" {
+  agent_id     = coder_agent.main.id
+  slug         = "happy"
+  display_name = "Happy"
+  icon         = "/icon/mobile.svg"
+  command      = "happy"
 }
 
 resource "docker_volume" "home_volume" {
