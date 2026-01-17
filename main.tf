@@ -203,26 +203,47 @@ resource "coder_agent" "main" {
       # Extract repo name from various URL formats
       REPO_NAME=$(basename "$REPO_INPUT" .git)
 
-      if [ ! -d ~/workspace/$REPO_NAME ]; then
+      if [ ! -d ~/workspace/$REPO_NAME/.git ]; then
         mkdir -p ~/workspace
+        echo "Cloning repository: $REPO_INPUT"
+
+        CLONE_SUCCESS=false
 
         # Check if it's already a full URL (SSH or HTTPS)
         if echo "$REPO_INPUT" | grep -qE '^(git@|https://|ssh://|git://)'; then
           # Full URL provided - use as-is, try SSH first then HTTPS
           if echo "$REPO_INPUT" | grep -qE '^https://'; then
             # HTTPS URL - also try SSH variant
-            git clone "$REPO_INPUT" ~/workspace/$REPO_NAME 2>/dev/null || \
-            git clone "$(echo "$REPO_INPUT" | sed 's|https://\([^/]*\)/|git@\1:|')" ~/workspace/$REPO_NAME
+            if git clone "$REPO_INPUT" ~/workspace/$REPO_NAME; then
+              CLONE_SUCCESS=true
+            elif git clone "$(echo "$REPO_INPUT" | sed 's|https://\([^/]*\)/|git@\1:|')" ~/workspace/$REPO_NAME; then
+              CLONE_SUCCESS=true
+            fi
           else
             # SSH URL - also try HTTPS variant
-            git clone "$REPO_INPUT" ~/workspace/$REPO_NAME 2>/dev/null || \
-            git clone "$(echo "$REPO_INPUT" | sed 's|git@\([^:]*\):|https://\1/|')" ~/workspace/$REPO_NAME
+            if git clone "$REPO_INPUT" ~/workspace/$REPO_NAME; then
+              CLONE_SUCCESS=true
+            elif git clone "$(echo "$REPO_INPUT" | sed 's|git@\([^:]*\):|https://\1/|')" ~/workspace/$REPO_NAME; then
+              CLONE_SUCCESS=true
+            fi
           fi
         else
           # Shorthand format (owner/repo) - assume GitHub
-          git clone "git@github.com:$REPO_INPUT.git" ~/workspace/$REPO_NAME 2>/dev/null || \
-          git clone "https://github.com/$REPO_INPUT.git" ~/workspace/$REPO_NAME
+          if git clone "git@github.com:$REPO_INPUT.git" ~/workspace/$REPO_NAME; then
+            CLONE_SUCCESS=true
+          elif git clone "https://github.com/$REPO_INPUT.git" ~/workspace/$REPO_NAME; then
+            CLONE_SUCCESS=true
+          fi
         fi
+
+        if [ "$CLONE_SUCCESS" = true ]; then
+          echo "Repository cloned successfully to ~/workspace/$REPO_NAME"
+        else
+          echo "ERROR: Failed to clone repository: $REPO_INPUT"
+          echo "Please check the repository URL and your SSH keys or access permissions."
+        fi
+      else
+        echo "Repository already exists at ~/workspace/$REPO_NAME"
       fi
     fi
 
