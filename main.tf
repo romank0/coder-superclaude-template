@@ -271,9 +271,11 @@ resource "coder_agent" "main" {
       coder dotfiles -y "${data.coder_parameter.dotfiles_repo.value}" 2>/dev/null || true
     fi
 
-    # Start VibeKanban in background
+    # Start VibeKanban in background (from persistent directory for state)
     echo "Starting VibeKanban..."
-    PORT=5173 nohup npx -y vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
+    mkdir -p ~/.vibe-kanban
+    cd ~/.vibe-kanban && PORT=5173 nohup npx -y vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
+    cd ~
 
     echo "Setup complete!"
   EOT
