@@ -271,11 +271,6 @@ resource "coder_agent" "main" {
       coder dotfiles -y "${data.coder_parameter.dotfiles_repo.value}" 2>/dev/null || true
     fi
 
-    # Start VibeKanban in background (from persistent directory for state)
-    echo "Starting VibeKanban..."
-    mkdir -p ~/.vibe-kanban
-    (cd ~/.vibe-kanban && PORT=5173 setsid npx -y vibe-kanban --no-open </dev/null >/tmp/vibekanban.log 2>&1 &)
-
     echo "Setup complete!"
   EOT
 
@@ -307,6 +302,20 @@ resource "coder_agent" "main" {
     interval     = 60
     timeout      = 1
   }
+}
+
+# VibeKanban background script (separate to avoid blocking startup)
+resource "coder_script" "vibekanban" {
+  agent_id     = coder_agent.main.id
+  display_name = "VibeKanban"
+  icon         = "/icon/kanban.svg"
+  run_on_start = true
+  script       = <<-EOT
+    #!/bin/bash
+    mkdir -p ~/.vibe-kanban
+    cd ~/.vibe-kanban
+    PORT=5173 exec npx -y vibe-kanban --no-open
+  EOT
 }
 
 # VS Code Web App
