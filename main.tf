@@ -205,6 +205,13 @@ resource "coder_agent" "main" {
 
       if [ ! -d ~/workspace/$REPO_NAME/.git ]; then
         mkdir -p ~/workspace
+
+        # Remove empty/failed clone directory if it exists
+        if [ -d ~/workspace/$REPO_NAME ] && [ ! -d ~/workspace/$REPO_NAME/.git ]; then
+          echo "Removing incomplete clone directory: ~/workspace/$REPO_NAME"
+          rm -rf ~/workspace/$REPO_NAME
+        fi
+
         echo "Cloning repository: $REPO_INPUT"
 
         CLONE_SUCCESS=false
@@ -216,29 +223,39 @@ resource "coder_agent" "main" {
             # HTTPS URL - also try SSH variant
             if git clone "$REPO_INPUT" ~/workspace/$REPO_NAME; then
               CLONE_SUCCESS=true
-            elif git clone "$(echo "$REPO_INPUT" | sed 's|https://\([^/]*\)/|git@\1:|')" ~/workspace/$REPO_NAME; then
-              CLONE_SUCCESS=true
+            else
+              rm -rf ~/workspace/$REPO_NAME 2>/dev/null
+              if git clone "$(echo "$REPO_INPUT" | sed 's|https://\([^/]*\)/|git@\1:|')" ~/workspace/$REPO_NAME; then
+                CLONE_SUCCESS=true
+              fi
             fi
           else
             # SSH URL - also try HTTPS variant
             if git clone "$REPO_INPUT" ~/workspace/$REPO_NAME; then
               CLONE_SUCCESS=true
-            elif git clone "$(echo "$REPO_INPUT" | sed 's|git@\([^:]*\):|https://\1/|')" ~/workspace/$REPO_NAME; then
-              CLONE_SUCCESS=true
+            else
+              rm -rf ~/workspace/$REPO_NAME 2>/dev/null
+              if git clone "$(echo "$REPO_INPUT" | sed 's|git@\([^:]*\):|https://\1/|')" ~/workspace/$REPO_NAME; then
+                CLONE_SUCCESS=true
+              fi
             fi
           fi
         else
           # Shorthand format (owner/repo) - assume GitHub
           if git clone "git@github.com:$REPO_INPUT.git" ~/workspace/$REPO_NAME; then
             CLONE_SUCCESS=true
-          elif git clone "https://github.com/$REPO_INPUT.git" ~/workspace/$REPO_NAME; then
-            CLONE_SUCCESS=true
+          else
+            rm -rf ~/workspace/$REPO_NAME 2>/dev/null
+            if git clone "https://github.com/$REPO_INPUT.git" ~/workspace/$REPO_NAME; then
+              CLONE_SUCCESS=true
+            fi
           fi
         fi
 
         if [ "$CLONE_SUCCESS" = true ]; then
           echo "Repository cloned successfully to ~/workspace/$REPO_NAME"
         else
+          rm -rf ~/workspace/$REPO_NAME 2>/dev/null
           echo "ERROR: Failed to clone repository: $REPO_INPUT"
           echo "Please check the repository URL and your SSH keys or access permissions."
         fi
