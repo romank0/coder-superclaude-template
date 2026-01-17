@@ -312,6 +312,9 @@ resource "coder_script" "code_server" {
   run_on_start = true
   script       = <<-EOT
     #!/bin/bash
+    # Ensure HOME is set correctly for Claude Code extension
+    export HOME=/home/coder
+    export USER=coder
     exec code-server --bind-addr 0.0.0.0:8080 --auth none "${local.repo_folder}"
   EOT
 }
