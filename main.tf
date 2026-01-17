@@ -149,52 +149,54 @@ resource "coder_agent" "main" {
     # Setup MCP servers directory
     mkdir -p ~/.config/claude-code/mcp
 
-    # Install Context7 MCP
-    if ! command -v npx &> /dev/null || ! npx @context7/mcp --version &> /dev/null; then
-      sudo npm install -g @context7/mcp 2>/dev/null || true
+    # Configure MCP servers in Claude config
+    echo "Configuring MCP servers..."
+
+    # Create ~/.claude.json if it doesn't exist
+    if [ ! -f ~/.claude.json ]; then
+      echo '{}' > ~/.claude.json
     fi
 
-    # Configure MCP servers in Claude config
-    if [ -f ~/.claude.json ]; then
-      # Add MCP servers to the project config (preserve coder MCP from module)
-      jq --arg workspace "${local.repo_folder}" '
-        .projects[$workspace].mcpServers += {
-          "filesystem": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-filesystem", $workspace]
-          },
-          "memory": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-memory"]
-          },
-          "context7": {
-            "command": "npx",
-            "args": ["-y", "@upstash/context7-mcp"]
-          },
-          "sequential-thinking": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-          },
-          "playwright": {
-            "command": "npx",
-            "args": ["-y", "@playwright/mcp@latest"]
-          },
-          "chrome-devtools": {
-            "command": "npx",
-            "args": ["-y", "chrome-devtools-mcp"]
-          },
-          "serena": {
-            "command": "uvx",
-            "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
-          },
-          "vibe-kanban": {
-            "command": "npx",
-            "args": ["-y", "vibe-kanban", "--mcp"]
-          }
-        }
-      ' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
-      echo "MCP servers configured."
-    fi
+    # Add MCP servers globally (not project-specific)
+    jq '.mcpServers += {
+      "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/coder/workspace"]
+      },
+      "memory": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-memory"]
+      },
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp"]
+      },
+      "sequential-thinking": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      },
+      "playwright": {
+        "command": "npx",
+        "args": ["-y", "@playwright/mcp@latest"]
+      },
+      "chrome-devtools": {
+        "command": "npx",
+        "args": ["-y", "chrome-devtools-mcp"]
+      },
+      "serena": {
+        "command": "uvx",
+        "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
+      },
+      "vibe-kanban": {
+        "command": "npx",
+        "args": ["-y", "vibe-kanban", "--mcp"]
+      },
+      "magic": {
+        "command": "npx",
+        "args": ["-y", "@21st-dev/magic@latest"]
+      }
+    }' ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+    echo "MCP servers configured in ~/.claude.json"
 
     # Clone repository if specified
     if [ -n "${data.coder_parameter.git_repo.value}" ]; then
