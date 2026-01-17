@@ -274,8 +274,7 @@ resource "coder_agent" "main" {
     # Start VibeKanban in background (from persistent directory for state)
     echo "Starting VibeKanban..."
     mkdir -p ~/.vibe-kanban
-    cd ~/.vibe-kanban && PORT=5173 nohup npx -y vibe-kanban --no-open > /tmp/vibekanban.log 2>&1 &
-    cd ~
+    (cd ~/.vibe-kanban && PORT=5173 setsid npx -y vibe-kanban --no-open </dev/null >/tmp/vibekanban.log 2>&1 &)
 
     echo "Setup complete!"
   EOT
