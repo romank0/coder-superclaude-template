@@ -101,8 +101,8 @@ resource "coder_agent" "main" {
     # Add common git hosts to known_hosts
     ssh-keyscan github.com gitlab.com bitbucket.org ssh.dev.azure.com >> ~/.ssh/known_hosts 2>/dev/null || true
 
-    # Fix permissions on mounted .claude directory (owned by root from host)
-    sudo chown -R coder:coder ~/.claude 2>/dev/null || true
+    # Create .claude directory structure
+    mkdir -p ~/.claude/plugins
 
     # Configure git
     git config --global user.name "${data.coder_workspace_owner.me.name}"
@@ -121,8 +121,9 @@ resource "coder_agent" "main" {
       sudo npm install -g happy-coder
     fi
 
-    # Claude credentials are mounted from host machine
-    if [ -f ~/.claude/.credentials.json ]; then
+    # Copy only credentials from host mount (not entire directory to avoid cached path issues)
+    if [ -f /tmp/.claude-host/.credentials.json ]; then
+      cp /tmp/.claude-host/.credentials.json ~/.claude/.credentials.json
       echo "Claude credentials loaded from host machine."
     else
       echo "Warning: No Claude credentials found. Run 'claude login' on host machine."
@@ -430,11 +431,11 @@ resource "docker_container" "workspace" {
     read_only      = false
   }
 
-  # Mount Claude credentials from host root user
+  # Mount Claude directory from host to temp location (will copy credentials only)
   volumes {
-    container_path = "/home/coder/.claude"
+    container_path = "/tmp/.claude-host"
     host_path      = "/root/.claude"
-    read_only      = false
+    read_only      = true
   }
 
   # Mount SSH keys from host root user (read-only, copied to .ssh on startup)
