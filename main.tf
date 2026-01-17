@@ -141,7 +141,7 @@ resource "coder_agent" "main" {
       echo "Installing Ralph Wiggum plugin..."
       mkdir -p ~/.claude/plugins
       git clone --depth 1 --filter=blob:none --sparse https://github.com/anthropics/claude-code.git /tmp/claude-code-plugins 2>/dev/null || true
-      cd /tmp/claude-code-plugins && git sparse-checkout set plugins/ralph-wiggum 2>/dev/null || true
+      (cd /tmp/claude-code-plugins && git sparse-checkout set plugins/ralph-wiggum 2>/dev/null || true)
       cp -r /tmp/claude-code-plugins/plugins/ralph-wiggum ~/.claude/plugins/ 2>/dev/null || true
       rm -rf /tmp/claude-code-plugins
       chmod +x ~/.claude/plugins/ralph-wiggum/hooks/*.sh 2>/dev/null || true
