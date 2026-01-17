@@ -304,6 +304,18 @@ resource "coder_agent" "main" {
   }
 }
 
+# Code-server background script
+resource "coder_script" "code_server" {
+  agent_id     = coder_agent.main.id
+  display_name = "VS Code Server"
+  icon         = "/icon/code.svg"
+  run_on_start = true
+  script       = <<-EOT
+    #!/bin/bash
+    exec code-server --bind-addr 0.0.0.0:8080 --auth none "${local.repo_folder}"
+  EOT
+}
+
 # VibeKanban background script (separate to avoid blocking startup)
 resource "coder_script" "vibekanban" {
   agent_id     = coder_agent.main.id
