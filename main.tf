@@ -12,10 +12,10 @@ terraform {
 
 # Official Claude Code module from Coder registry
 module "claude-code" {
-  source       = "registry.coder.com/coder/claude-code/coder"
-  version      = "1.4.0"
-  agent_id     = coder_agent.main.id
-  folder       = local.repo_folder
+  source   = "registry.coder.com/coder/claude-code/coder"
+  version  = "1.4.0"
+  agent_id = coder_agent.main.id
+  folder   = local.repo_folder
 
   # Disable module's npm install - we handle it with sudo in startup script
   install_claude_code = false
@@ -77,6 +77,25 @@ data "coder_parameter" "memory" {
   order        = 4
 }
 
+data "coder_parameter" "ssh_host_path" {
+  name         = "ssh_host_path"
+  display_name = "SSH Keys Path (Host)"
+  description  = "Path to SSH keys on the host machine (e.g., /home/coder-git/.ssh for a dedicated user)"
+  type         = "string"
+  default      = "/root/.ssh"
+  mutable      = false
+  order        = 5
+}
+
+data "coder_parameter" "claude_host_path" {
+  name         = "claude_host_path"
+  display_name = "Claude Credentials Path (Host)"
+  description  = "Path to Claude credentials directory on the host"
+  type         = "string"
+  default      = "/root/.claude"
+  mutable      = false
+  order        = 6
+}
 
 resource "coder_agent" "main" {
   arch           = data.coder_provisioner.me.arch
@@ -276,8 +295,8 @@ resource "coder_agent" "main" {
   EOT
 
   env = {
-    GIT_AUTHOR_NAME   = data.coder_workspace_owner.me.name
-    GIT_AUTHOR_EMAIL  = data.coder_workspace_owner.me.email
+    GIT_AUTHOR_NAME  = data.coder_workspace_owner.me.name
+    GIT_AUTHOR_EMAIL = data.coder_workspace_owner.me.email
   }
 
   metadata {
@@ -434,14 +453,14 @@ resource "docker_container" "workspace" {
   # Mount Claude directory from host to temp location (will copy credentials only)
   volumes {
     container_path = "/tmp/.claude-host"
-    host_path      = "/root/.claude"
+    host_path      = data.coder_parameter.claude_host_path.value
     read_only      = true
   }
 
-  # Mount SSH keys from host root user (read-only, copied to .ssh on startup)
+  # Mount SSH keys from host (read-only, copied to .ssh on startup)
   volumes {
     container_path = "/home/coder/.ssh-host"
-    host_path      = "/root/.ssh"
+    host_path      = data.coder_parameter.ssh_host_path.value
     read_only      = true
   }
 }
