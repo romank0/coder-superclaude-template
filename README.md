@@ -43,32 +43,41 @@ coder create my-workspace --template claude-code
 
 ### 3. Prerequisites on Host Machine
 
-Ensure the **root user** on your Coder host has:
+Ensure Claude credentials and SSH keys exist on the host at the paths you'll configure:
 
 ```bash
-# Claude Code logged in
+# Claude Code logged in (default path: /root/.claude)
 sudo claude login
 
-# SSH key for GitHub
+# SSH key for GitHub (default path: /root/.ssh)
 sudo ls /root/.ssh/id_ed25519  # or id_rsa
 ```
 
-These are automatically mounted into workspaces.
+For better security, consider using a dedicated user instead of root:
+
+```bash
+# Create dedicated user for git credentials
+sudo useradd -m coder-git
+sudo -u coder-git ssh-keygen -t ed25519 -f /home/coder-git/.ssh/id_ed25519
+# Add public key to GitHub, then use /home/coder-git/.ssh as ssh_host_path
+```
 
 ### 4. Configure Parameters
 
 When creating the workspace:
 
-| Parameter | Description |
-|-----------|-------------|
-| `git_repo` | Repository to clone - supports SSH (`git@github.com:owner/repo.git`), HTTPS (`https://github.com/owner/repo.git`), or shorthand (`owner/repo` for GitHub) |
-| `dotfiles_repo` | Your dotfiles repository (optional) |
-| `cpu` | CPU cores (default: 4) |
-| `memory` | Memory in GB (default: 8) |
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `git_repo` | Repository to clone - supports SSH, HTTPS, or shorthand (`owner/repo`) | (empty) |
+| `dotfiles_repo` | Your dotfiles repository (optional) | (empty) |
+| `cpu` | CPU cores | 4 |
+| `memory` | Memory in GB | 8 |
+| `ssh_host_path` | Path to SSH keys on the host machine | `/root/.ssh` |
+| `claude_host_path` | Path to Claude credentials directory on the host | `/root/.claude` |
 
-**Auto-mounted from host `/root/`:**
-- `~/.claude` - Claude Code credentials (writable)
-- `~/.ssh-host` → `~/.ssh` - SSH keys (copied on startup with proper permissions)
+**What gets mounted:**
+- `claude_host_path` → `/tmp/.claude-host` (read-only, only `.credentials.json` is copied)
+- `ssh_host_path` → `~/.ssh-host` → `~/.ssh` (read-only, copied on startup with proper permissions)
 
 ## Usage
 
@@ -153,15 +162,18 @@ Additional MCP servers you can add:
 
 ## SSH Key Setup
 
-SSH keys are automatically mounted from the host's `/root/.ssh` directory and copied to `~/.ssh` with proper permissions on startup.
+SSH keys are mounted from the host path configured via `ssh_host_path` parameter (default: `/root/.ssh`) and copied to `~/.ssh` with proper permissions on startup.
 
 ### Option 1: Use Host Keys (Recommended)
 
-Ensure SSH keys exist on the Coder host:
+Ensure SSH keys exist on the Coder host at your configured path:
 
 ```bash
-# On host machine
+# On host machine (default path)
 sudo ls -la /root/.ssh/
+
+# Or with a dedicated user (more secure)
+ls -la /home/coder-git/.ssh/
 ```
 
 ### Option 2: Interactive Setup
@@ -237,8 +249,9 @@ module "claude-code" {
 # Check if credentials are mounted
 ls -la ~/.claude/
 
-# If missing, login on the HOST machine as root:
-# sudo claude login
+# If missing, login on the HOST machine at your configured claude_host_path:
+# Default: sudo claude login (creates /root/.claude/.credentials.json)
+# Or for a specific user: sudo -u myuser claude login
 ```
 
 ### SSH key not working
