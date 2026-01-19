@@ -66,6 +66,12 @@ RUN apt-get update && apt-get install -y \
     chromium-browser \
     && rm -rf /var/lib/apt/lists/*
 
+# Install jj (Jujutsu VCS)
+RUN JJ_VERSION=$(curl -fsSL https://api.github.com/repos/jj-vcs/jj/releases/latest | jq -r '.tag_name' | sed 's/^v//') \
+    && curl -fsSL "https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    | tar -xzf - -C /usr/local/bin --strip-components=1 "jj-v${JJ_VERSION}-x86_64-unknown-linux-musl/jj" \
+    && chmod +x /usr/local/bin/jj
+
 # Install code-server (VS Code in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
